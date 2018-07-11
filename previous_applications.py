@@ -114,24 +114,34 @@ prevdays[prevdays['SK_ID_CURR']==100001]
 #installments study 1251047
 
 
-install_paid=install_pay[['SK_ID_CURR','SK_ID_PREV','NUM_INSTALMENT_NUMBER','AMT_PAYMENT']]
-install_paid=install_paid.drop_duplicates()
-install_paid = install_paid.groupby(['SK_ID_CURR','SK_ID_PREV','NUM_INSTALMENT_NUMBER']).agg(['sum'])
-
-install_paid.reset_index(inplace=True)
-install_paid.shape# (12861994, 4)
 
 install_paid1=install_pay[['SK_ID_CURR','SK_ID_PREV','NUM_INSTALMENT_NUMBER','AMT_INSTALMENT']]
 install_paid1.shape
 install_paid1=install_paid1.drop_duplicates()
 install_paid1.shape# (12951891, 4)
 
+install_paid=install_pay[['SK_ID_CURR','SK_ID_PREV','NUM_INSTALMENT_NUMBER','AMT_PAYMENT']]
+#install_paid=install_paid.drop_duplicates()
+install_paid = install_paid.groupby(['SK_ID_CURR','SK_ID_PREV','NUM_INSTALMENT_NUMBER']).agg(['sum'])
+
+install_paid.reset_index(inplace=True)
+install_paid.shape# (12861994, 4)
+
+installmerged=install_paid.merge(install_paid1,  on=(["SK_ID_CURR","SK_ID_PREV","NUM_INSTALMENT_NUMBER"]))
+installmerged1=installmerged.iloc[:,[0,1,6,7]]
 
 
 
+installmergednew1=installmerged1.groupby(['SK_ID_CURR','SK_ID_PREV']).agg('sum')
+installmergednew1=installmergednew1.reset_index()
+installmergednew1['AMT_PAYMENT']=installmergednew1.iloc[:,2]
 
+installmergednew1['Remaining']=installmergednew1['AMT_INSTALMENT']-installmergednew1['AMT_PAYMENT']
+installmergednew2=installmergednew1.fillna(0)
+plt.hist(installmergednew2['Remaining'])
+#len(installmergednew1[installmergednew1['Remaining'].isnull()==True])
+len(installmergednew1[installmergednew1['Remaining']>0]) #8623
+len(installmergednew1[installmergednew1['Remaining']<0]) #56764
 
-
-
-
-
+len(installmergednew1[installmergednew1['Remaining']>0].SK_ID_CURR.unique())#8342
+len(installmergednew1[installmergednew1['Remaining']<0].SK_ID_CURR.unique())#49328
